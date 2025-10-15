@@ -4,8 +4,7 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PACKAGE_NAME="$(basename "$SCRIPT_DIR")"
+PACKAGE_NAME="$(basename "$(pwd)")"
 
 echo "=== Building $PACKAGE_NAME package ==="
 

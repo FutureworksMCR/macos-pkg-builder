@@ -62,8 +62,9 @@ jobs:
         run: ./build.sh
 
       - name: Verify package exists
+        working-directory: ${{ inputs.package }}
         run: |
-          PKG_FILE="${{ inputs.package }}/${{ inputs.package }}.pkg"
+          PKG_FILE="${{ inputs.package }}.pkg"
           if [[ ! -f "$PKG_FILE" ]]; then
             echo "ERROR: Package file not found at $PKG_FILE"
             exit 1

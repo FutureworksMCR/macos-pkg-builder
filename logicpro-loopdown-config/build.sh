@@ -13,4 +13,4 @@ echo "  1. Install logicpro1120-custom.plist to /Library/Application Support/Loo
 echo "  2. Check for loopdown and managed_python3"
 echo "  3. Run loopdown to download and install the Logic Pro content"
 echo ""
-echo "Install with: sudo installer -pkg loopdown-config.pkg -target /"
+echo "Install with: sudo installer -pkg logicpro-loopdown-config.pkg -target /"
