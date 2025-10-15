@@ -1,0 +1,66 @@
+name: Build Packages
+
+on:
+  push:
+    branches: 
+      - main
+  pull_request:
+    branches: 
+      - main
+  workflow_dispatch:
+
+jobs:
+  discover-packages:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.find-packages.outputs.packages }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find packages to build
+        id: find-packages
+        run: |
+          # Find all directories with pkgbuild.yaml (exclude template)
+          packages=$(find . -maxdepth 2 -name "pkgbuild.yaml" -not -path "./template/*" | \
+                     xargs dirname | \
+                     sed 's|^\./||' | \
+                     jq -R -s -c 'split("\n")[:-1]')
+          
+          echo "Found packages: $packages"
+          echo "packages=$packages" >> $GITHUB_OUTPUT
+
+  build:
+    needs: discover-packages
+    if: needs.discover-packages.outputs.packages != '[]'
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.discover-packages.outputs.packages) }}
+      fail-fast: false
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make build scripts executable
+        run: |
+          chmod +x build.sh
+          chmod +x ${{ matrix.package }}/build.sh
+
+      - name: Build ${{ matrix.package }} package
+        working-directory: ${{ matrix.package }}
+        run: ./build.sh
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package }}-pkg
+          path: ${{ matrix.package }}/*.pkg
+          retention-days: 30
+
+      - name: Package info
+        run: |
+          echo "Package: ${{ matrix.package }}"
+          echo "Files:"
+          pkgutil --payload-files ${{ matrix.package }}/*.pkg | head -20

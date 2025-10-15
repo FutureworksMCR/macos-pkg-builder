@@ -1,0 +1,72 @@
+#!/bin/bash
+set -euo pipefail
+
+LOG_FILE="/var/log/logicpro-loopdown-config-install.log"
+
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S'): $1" | tee -a "$LOG_FILE"
+}
+
+log "=== Starting logicpro-loopdown-config postinstall ==="
+
+LOOPDOWN="/usr/local/bin/loopdown"
+PYTHON="/usr/local/bin/managed_python3"
+CONFIG_FILE="/Library/Application Support/Loopdown/logicpro1120-custom.plist"
+
+# Optional: Set PKG_SERVER environment variable to use local mirror
+# Example: export PKG_SERVER="http://your-mirror-server.local"
+# Comment out if using Apple's default server
+PKG_SERVER="http://munki.puppet.local/mirror/loopdown"
+
+log "Checking for required tools..."
+
+if [[ ! -x "$LOOPDOWN" ]]; then
+    log "ERROR: loopdown not found at $LOOPDOWN"
+    log "Please install loopdown before running this package"
+    exit 1
+fi
+
+if [[ ! -x "$PYTHON" ]]; then
+    log "ERROR: managed_python3 not found at $PYTHON"
+    log "Please install managed_python3 before running this package"
+    exit 1
+fi
+
+log "Found loopdown at $LOOPDOWN"
+log "Found python at $PYTHON"
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    log "ERROR: Configuration plist not found at $CONFIG_FILE"
+    exit 1
+fi
+
+if ! plutil -lint "$CONFIG_FILE" >/dev/null 2>&1; then
+    log "ERROR: Invalid plist format in $CONFIG_FILE"
+    exit 1
+fi
+
+log "Configuration plist validated successfully at $CONFIG_FILE"
+
+if [[ -n "$PKG_SERVER" ]]; then
+    LOOPDOWN_CMD=("$PYTHON" "$LOOPDOWN" -p "$CONFIG_FILE" -i -m -o --pkg-server "$PKG_SERVER")
+    log "Using package server: $PKG_SERVER"
+else
+    LOOPDOWN_CMD=("$PYTHON" "$LOOPDOWN" -p "$CONFIG_FILE" -i -m -o --cache-server auto)
+    log "Using Apple CDN with content caching"
+fi
+
+log "Starting audio content installation..."
+log "Running: ${LOOPDOWN_CMD[*]}"
+
+if "${LOOPDOWN_CMD[@]}"; then
+    log "Audio content installation completed successfully"
+    log "=== logicpro-loopdown-config postinstall complete ==="
+    log "Loopdown specific logs available at /Users/Shared/loopdown"
+    exit 0
+else
+    EXIT_CODE=$?
+    log "ERROR: loopdown failed with exit code $EXIT_CODE"
+    log "Audio content was NOT installed"
+    log "Check loopdown logs at /Users/Shared/loopdown"
+    exit 1
+fi

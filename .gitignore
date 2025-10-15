@@ -1,0 +1,16 @@
+# Build artifacts
+build/
+*.pkg
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*~

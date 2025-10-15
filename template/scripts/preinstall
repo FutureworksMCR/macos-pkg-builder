@@ -1,0 +1,11 @@
+#!/bin/bash
+# Preinstall script (optional)
+# Runs before package files are installed
+
+set -e
+
+echo "Running preinstall script..."
+
+# Add your preinstall logic here
+
+exit 0

@@ -1,0 +1,11 @@
+#!/bin/bash
+# Postinstall script (optional)
+# Runs after package files are installed
+
+set -e
+
+echo "Running postinstall script..."
+
+# Add your postinstall logic here
+
+exit 0
